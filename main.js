@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require("electron");
+const { app, BrowserWindow, nativeTheme } = require("electron");
 
 const server = require("./app");
 
@@ -20,11 +20,16 @@ function UpsertKeyValue(obj, keyToChange, value) {
 
 function createWindow() {
     mainWindow = new BrowserWindow({
-        width: 1200,
-        height: 700,
+        width: 470,
+        height: 270,
+        minWidth: 470,
+        minHeight: 300,
+        resizable: false,
+        autoHideMenuBar: true,
         webPreferences: {
             nodeIntegration: true,
         },
+        icon: "./assets/icon.png",
     });
 
     mainWindow.loadURL("http://localhost:8383");

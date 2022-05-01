@@ -14,9 +14,9 @@ var express = require("express"), // Express web server framework
 const { json } = require("express/lib/response");
 
 var spotify_client_id = "71fef7bf04154244983a0f920c1c4064", // Your client id
-    spotify_client_secret = "client secret", // Your secret
+    spotify_client_secret = "client_secret", // Your secret
     lastfm_api_key = "53a170f816b7dc8552d657154a07c672",
-    lastfm_shared_secret = "shared secret",
+    lastfm_shared_secret = "shared_secret",
     port = 8383, // Port to listen on
     redirect_uri = "http://localhost:" + port + "/callback"; // Your redirect uri
 
