@@ -135,7 +135,10 @@
                   info_genres = "";
                   artist = res.item.artists[0].name;
                   for (i in res.item.artists) {
-                    info_artists += res.item.artists[i].name + " ";
+                    info_artists += res.item.artists[i].name;
+                    if (i < res.item.artists.length - 1) {
+                      info_artists += ", ";
+                    }
                   }
 
                   try {

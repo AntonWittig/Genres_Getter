@@ -26,12 +26,17 @@ function createWindow() {
         minHeight: 300,
         resizable: false,
         autoHideMenuBar: true,
+        alwaysOnTop: true,
         webPreferences: {
             nodeIntegration: true,
         },
         icon: "./assets/icon.png",
     });
 
+    nativeTheme.themeSource = "system";
+    mainWindow.once("ready-to-show", () => {
+        mainWindow.show();
+    });
     mainWindow.loadURL("http://localhost:8383");
     mainWindow.on("closed", function() {
         mainWindow = null;

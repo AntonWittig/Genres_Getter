@@ -156,13 +156,6 @@ app.get("/refresh_token", function(req, res) {
             res.send({
                 access_token: access_token,
             });
-            res.redirect(
-                "/#" +
-                new URLSearchParams({
-                    access_token: access_token,
-                    refresh_token: refresh_token,
-                }).toString()
-            );
         }
     });
 });
