@@ -1,13 +1,16 @@
-import TrackTemplate from "./templates/track.handlebars";
-import UserTemplate from "./templates/user.handlebars";
-import { env } from "node:process";
-import { getCurrentlyPlayingTrack } from "./scripts/spotify_api_interactions";
+import { getCurrentlyPlayingTrack, refreshAccessToken } from './scripts/spotify_api_interactions';
+
+import TrackTemplate from './templates/track.handlebars';
+import UserTemplate from './templates/user.handlebars';
+import { env } from 'node:process';
+
+const REFRESH_INTERVAL = 1000 // ms
 
 // Get important document elements
-const initialView = document.getElementById("initialView");
-const functionalView = document.getElementById("functionalView");
-const userContainer = document.getElementById("userContainer");
-const trackContainer = document.getElementById("infoContainer");
+const initialView = document.getElementById('initialView');
+const functionalView = document.getElementById('functionalView');
+const userContainer = document.getElementById('userContainer');
+const trackContainer = document.getElementById('infoContainer');
 
 async function update() {
 	// TODO show loading text while not handled User Profile success
@@ -44,19 +47,28 @@ function main() {
 
 	let updateInterval;
 
-	if (error) {
-		alert("There was an error during the authentication: " + error);
-		return;
-	} else if (access_token) {
+	switch (error) {
+		case 'invalid_token':
+			refreshAccessToken()
+			break;
+		case undefined:
+			break;
+
+		default:
+			alert(`There was an error during the authentication: ${error}`);
+			return;
+	}
+
+	if (access_token) {
 		// logged in, start up getting genres
-		$.ajax({
-			url: "https://api.spotify.com/v1/me",
+		$.get({
+			url: 'https://api.spotify.com/v1/me',
 			headers: {
-				Authorization: `Bearer ${access_token}`,
+				'Authorization': `Bearer ${access_token}`,
 			},
 			success: handleUserProfileSuccess
 		});
-		updateInterval = setInterval(update, 1000);
+		updateInterval = setInterval(update, REFRESH_INTERVAL);
 	} else {
 		// not logged in yet, render initial screen
 		env.CONNECTED = false;

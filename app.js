@@ -1,34 +1,42 @@
 /**
- * This is an example of a basic node.js script that performs
- * the Authorization Code oAuth2 flow to authenticate against
- * the Spotify Accounts.
- *
- * For more information, read
- * https://developer.spotify.com/web-api/authorization-guide/#authorization_code_flow
+ * This is the GenreGetter node.js backend.
+ * It performs the Authorization Code oAuth2 flow 
+ * to authenticate against the Spotify Account API.
+ * It also performs the getting of genres for the
+ * currently playing song.
  */
 
-var express = require("express"), // Express web server framework
-    request = require("request"), // "Request" library
-    cors = require("cors"),
-    cookieParser = require("cookie-parser");
-const { json } = require("express/lib/response");
+//#region Imports
 
-var spotify_client_id = "71fef7bf04154244983a0f920c1c4064", // Your client id
-    spotify_client_secret = "client_secret", // Your secret
-    lastfm_api_key = "53a170f816b7dc8552d657154a07c672",
-    lastfm_shared_secret = "shared_secret",
-    port = 8383, // Port to listen on
-    redirect_uri = "http://localhost:" + port + "/callback"; // Your redirect uri
+import { $ } from './external_scripts/jquery-3.7.1.min';
+import cookieParser from 'cookie-parser';
+import cors from 'cors';
+import express from 'express';
 
+//#endregion
+
+//#region Global variables
+const CLIENT_ID = '71fef7bf04154244983a0f920c1c4064'
+const CLIENT_SECRET = '********'
+const ENCODED_CREDENTIALS = new Buffer
+    .from(`${CLIENT_ID}:${CLIENT_SECRET}`)
+    .toString('base64');
+const AUTH_STATE_KEY = 'spotify_auth_state';
+
+const SERVER_PORT = 8383
+const REDIRECT_URI = `http://localhost:${SERVER_PORT}/callback`;
+//#endregion
+
+// TODO move utility functions to separate file
 /**
  * Generates a random string containing numbers and letters
  * @param  {number} length The length of the string
  * @return {string} The generated string
  */
-var generateRandomString = function(length) {
-    var text = "";
+function generateRandomString(length) {
+    var text = '';
     var possible =
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
     for (var i = 0; i < length; i++) {
         text += possible.charAt(Math.floor(Math.random() * possible.length));
@@ -36,131 +44,133 @@ var generateRandomString = function(length) {
     return text;
 };
 
-var stateKey = "spotify_auth_state";
+/**
+ * Handles incoming errors.
+ * Sends errors to view as query parameter.
+ */
+function errorHandler(error, response) {
+    response.redirect(`/#error=${error}`);
+}
 
-var app = express();
+const app = express();
 
-app
-    .use(express.static(__dirname + "/public"))
-    .use(cors())
-    .use(cookieParser());
+app.use([
+    express.static('/public'),
+    cors(),
+    cookieParser()
+]);
 
-app.get("/login", function(req, res) {
-    var state = generateRandomString(16);
-    res.cookie(stateKey, state);
+//#region Spotify authentication
+/**
+ * Initiate standard Spotify authentication flow.
+ * Stores authorization state as a cookie.
+ */
+app.get('/login', function (request, response) {
 
-    // your application requests authorization
-    var scope = "user-read-playback-state";
-    res.redirect(
-        "https://accounts.spotify.com/authorize?" +
+    const state = generateRandomString(16);
+    const scope = 'user-read-playback-state';
+
+    response.cookie(AUTH_STATE_KEY, state);
+
+    response.redirect(
+        'https://accounts.spotify.com/authorize?' +
         new URLSearchParams({
-            response_type: "code",
-            client_id: spotify_client_id,
+            response_type: 'code',
+            client_id: CLIENT_ID,
             scope: scope,
-            redirect_uri: redirect_uri,
+            redirect_uri: REDIRECT_URI,
             state: state,
         }).toString()
     );
 });
 
-app.get("/callback", function(req, res) {
-    // your application requests refresh and access tokens
-    // after checking the state parameter
+/**
+ * Handle Spotify authentication callback.
+ * Assert state equality and handle authentication errors.
+ */
+app.get('/callback', function (request, response) {
 
-    var code = req.query.code || null;
-    var state = req.query.state || null;
-    var storedState = req.cookies ? req.cookies[stateKey] : null;
+    const returnedState = request?.query?.state;
+    const originalState = request?.cookies[AUTH_STATE_KEY];
 
-    if (state === null || state !== storedState) {
-        res.redirect(
-            "/#" +
-            new URLSearchParams({
-                error: "state_mismatch",
-            }).toString()
-        );
-    } else {
-        res.clearCookie(stateKey);
-        var authOptions = {
-            url: "https://accounts.spotify.com/api/token",
-            form: {
-                code: code,
-                redirect_uri: redirect_uri,
-                grant_type: "authorization_code",
-            },
-            headers: {
-                Authorization: "Basic " +
-                    Buffer.from(spotify_client_id + ":" + spotify_client_secret).toString(
-                        "base64"
-                    ),
-            },
-            json: true,
-        };
+    if (returnedState === undefined ||
+        returnedState !== originalState) {
 
-        request.post(authOptions, function(error, response, body) {
-            if (!error && response.statusCode === 200) {
-                var access_token = body.access_token,
-                    refresh_token = body.refresh_token;
-
-                var options = {
-                    url: "https://api.spotify.com/v1/me",
-                    headers: { Authorization: "Bearer " + access_token },
-                    json: true,
-                };
-
-                // use the access token to access the Spotify Web API
-                request.get(options, function(error, response, body) {
-                    console.log(body);
-                });
-
-                // we can also pass the token to the browser to make requests from there
-                res.redirect(
-                    "/#" +
-                    new URLSearchParams({
-                        access_token: access_token,
-                        refresh_token: refresh_token,
-                    }).toString()
-                );
-            } else {
-                res.redirect(
-                    "/#" +
-                    new URLSearchParams({
-                        error: "invalid_token",
-                    }).toString()
-                );
-            }
-        });
+        errorHandler('state_mismatch', response);
     }
-});
 
-app.get("/refresh_token", function(req, res) {
-    // requesting access token from refresh token
-    var refresh_token = req.query.refresh_token;
-    var authOptions = {
-        url: "https://accounts.spotify.com/api/token",
+    const returnedError = request?.query?.error;
+
+    if (returnedError) {
+
+        errorHandler(returnedError, response)
+    }
+
+    response.clearCookie(AUTH_STATE_KEY);
+
+    const authorizationCode = request?.query?.code;
+
+    // request access and refresh token using authorization code
+    $.post({
+        url: 'https://accounts.spotify.com/api/token',
         headers: {
-            Authorization: "Basic " +
-                Buffer.from(spotify_client_id + ":" + spotify_client_secret).toString(
-                    "base64"
-                ),
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': `Basic ${ENCODED_CREDENTIALS}`,
         },
-        form: {
-            grant_type: "refresh_token",
-            refresh_token: refresh_token,
+        data: {
+            grant_type: 'authorization_code',
+            code: authorizationCode,
+            redirect_uri: REDIRECT_URI,
         },
-        json: true,
-    };
-
-    request.post(authOptions, function(error, response, body) {
-        if (!error && response.statusCode === 200) {
-            var access_token = body.access_token;
-            res.send({
-                access_token: access_token,
-            });
-        }
+        success: function (data) {
+            // send access and refresh token to view as query parameters
+            response.redirect('/#' +
+                new URLSearchParams({
+                    access_token: data.access_token,
+                    refresh_token: data.refresh_token,
+                }).toString()
+            );
+        },
+        error: function (xhr) {
+            errorHandler(`${xhr.status}_${xhr.statusText}`, response);
+        },
     });
 });
 
-app.get("/get_genres", function(req, res) {
+/**
+ * Request access token using refresh token.
+ */
+app.get('/refresh_token', function (request, response) {
+
+    $.post({
+        url: 'https://accounts.spotify.com/api/token',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': `Basic ${ENCODED_CREDENTIALS}`,
+        },
+        data: {
+            grant_type: 'refresh_token',
+            refresh_token: env.REFRESH_TOKEN,
+        },
+        success: function (data) {
+            // send access and refresh token to view as query parameters
+            response.redirect('/#' +
+                new URLSearchParams({
+                    access_token: data.access_token,
+                    refresh_token: data.refresh_token,
+                }).toString()
+            );
+        },
+        error: function (xhr) {
+            errorHandler(`${xhr.status}_${xhr.statusText}`, response);
+        },
+    });
+});
+//#endregion
+
+//#region Spotify genres
+app.get('/get_genres', function (req, res) {
+    // TODO develop new genre flow via recommendations
     var options = {
         url: "https://ws.audioscrobbler.com/2.0/?" +
             new URLSearchParams({
@@ -173,7 +183,7 @@ app.get("/get_genres", function(req, res) {
             }),
     };
     if (req.query.artist && req.query.track) {
-        request.get(options, function(error, response, body) {
+        get(options, function (error, response, body) {
             if (!error && response.statusCode === 200) {
                 var jsonbody = JSON.parse(body);
 
@@ -187,6 +197,6 @@ app.get("/get_genres", function(req, res) {
         res.status(400).send("Bad Request");
     }
 });
+//#endregion
 
-console.log("Listening on " + port);
-app.listen(port);
+app.listen(SERVER_PORT);
