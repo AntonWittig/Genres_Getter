@@ -1,0 +1,46 @@
+head {
+	background-color: #192227;
+	color: #f0f0f0;
+}
+
+#login,
+#loggedin {
+	display: none;
+}
+
+.login-btn {
+	margin: 65px 145px;
+}
+
+.container {
+	position: absolute;
+	left: 0;
+	top: 0;
+	margin: 0;
+	padding: 15px;
+	width: 450px;
+}
+
+.dl-horizontal {
+	display: grid;
+	grid-template-columns: max-content auto;
+}
+
+.dl-horizontal dt {
+	grid-column-start: 1;
+	width: 70px;
+	margin: 0;
+	text-align: right;
+}
+
+.dl-horizontal dd {
+	grid-column-start: 2;
+	margin-left: 10px;
+	width: calc(100% - 10px);
+}
+
+.text-overflow {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
