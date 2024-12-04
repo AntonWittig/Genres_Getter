@@ -8,20 +8,22 @@
 
 //#region Imports
 
-import { $ } from './external_scripts/jquery-3.7.1.min';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
+import { $ } from './external_scripts/jquery-3.7.1.min';
 
 //#endregion
 
 //#region Global variables
-const CLIENT_ID = '71fef7bf04154244983a0f920c1c4064'
-const CLIENT_SECRET = '********'
+const SPOTIFY_CLIENT_ID = '71fef7bf04154244983a0f920c1c4064'
+const SPOTIFY_CLIENT_SECRET = '********'
 const ENCODED_CREDENTIALS = new Buffer
-    .from(`${CLIENT_ID}:${CLIENT_SECRET}`)
+    .from(`${SPOTIFY_CLIENT_ID}:${SPOTIFY_CLIENT_SECRET}`)
     .toString('base64');
 const AUTH_STATE_KEY = 'spotify_auth_state';
+
+const LASTFM_API_KEY = '53a170f816b7dc8552d657154a07c672'
 
 const SERVER_PORT = 8383
 const REDIRECT_URI = `http://localhost:${SERVER_PORT}/callback`;
@@ -76,7 +78,7 @@ app.get('/login', function (request, response) {
         'https://accounts.spotify.com/authorize?' +
         new URLSearchParams({
             response_type: 'code',
-            client_id: CLIENT_ID,
+            client_id: SPOTIFY_CLIENT_ID,
             scope: scope,
             redirect_uri: REDIRECT_URI,
             state: state,
@@ -168,34 +170,29 @@ app.get('/refresh_token', function (request, response) {
 });
 //#endregion
 
-//#region Spotify genres
-app.get('/get_genres', function (req, res) {
-    // TODO develop new genre flow via recommendations
-    var options = {
-        url: "https://ws.audioscrobbler.com/2.0/?" +
-            new URLSearchParams({
-                method: "track.gettoptags",
-                artist: req.query.artist,
-                track: req.query.track,
-                autocorrect: "1",
-                api_key: lastfm_api_key,
-                format: "json",
-            }),
-    };
-    if (req.query.artist && req.query.track) {
-        get(options, function (error, response, body) {
-            if (!error && response.statusCode === 200) {
-                var jsonbody = JSON.parse(body);
+//#region lastfm genres
+app.get('/get_genres', function (request, response) {
+    // -name artists- genres images
 
-                var genres = jsonbody.toptags.tag;
-                res.send({
-                    genres: genres,
-                });
-            }
-        });
-    } else {
-        res.status(400).send("Bad Request");
-    }
+
+
+    $.get({
+        url: 'https://ws.audioscrobbler.com/2.0/?' +
+            new URLSearchParams({
+                method: 'track.gettoptags',
+                artist: env.TRACK_ARTISTS,
+                track: env.TRACK_NAME,
+                autocorrect: "1",
+                api_key: LASTFM_API_KEY,
+                format: 'json',
+            }),
+        success: function (data) {
+            response.send({ genres: data?.toptags?.tag });
+        },
+        error: function (xhr) {
+            errorHandler(`${xhr.status}_${xhr.statusText}`, response);
+        },
+    });
 });
 //#endregion
 
