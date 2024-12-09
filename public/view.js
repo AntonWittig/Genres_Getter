@@ -1,19 +1,29 @@
+//#region Imports
+
 import { getCurrentlyPlayingTrack, refreshAccessToken } from './scripts/spotify_api_interactions';
 
+import { env } from 'node:process';
 import TrackTemplate from './templates/track.handlebars';
 import UserTemplate from './templates/user.handlebars';
-import { env } from 'node:process';
 
-const REFRESH_INTERVAL = 1000 // ms
+//#endregion
+
+//#region Global variables
+const REFRESH_INTERVAL = 1000; // ms
+const DEFAULT_GENRES_MESSAGE = 'No genres found';
 
 // Get important document elements
 const initialView = document.getElementById('initialView');
 const functionalView = document.getElementById('functionalView');
 const userContainer = document.getElementById('userContainer');
 const trackContainer = document.getElementById('infoContainer');
+//#endregion
 
+//#region App flow
+/**
+ * Runs every REFRESH_INTERVAL milliseconds and initiates visual and content updates.
+ */
 async function update() {
-	// TODO show loading text while not handled User Profile success
 	if (env.CONNECTED) {
 		initialView.hide();
 		functionalView.show();
@@ -22,11 +32,17 @@ async function update() {
 			display_name: env.DISPLAY_NAME
 		});
 
-		await getCurrentlyPlayingTrack();
+		const trackInformation = await getCurrentlyPlayingTrack();
+
+		// TODO also include track cover
+		env.TRACK_NAME = trackInformation.name;
+		env.TRACK_ARTISTS = trackInformation.artists.join(', ');
+		env.TRACK_GENRES = filterGenres(trackInformation.genres).join(', ');
+
 		trackContainer.innerHTML = TrackTemplate({
 			track: env.TRACK_NAME,
 			artists: env.TRACK_ARTISTS,
-			genres: env.TRACK_GENRES
+			genres: env.TRACK_GENRES.length > 0 ? env.TRACK_GENRES : DEFAULT_GENRES_MESSAGE,
 		});
 	}
 	else {
@@ -35,13 +51,12 @@ async function update() {
 	}
 }
 
-function handleUserProfileSuccess(data) {
-	env.DISPLAY_NAME = data.display_name;
-	env.CONNECTED = true;
-}
-
+/**
+ * Runs once the site is refreshed/loaded.
+ */
 function main() {
-	const { access_token, refresh_token, error } = getHashParameters();
+	// TODO figure out how to best skip this on reload
+	const { access_token, refresh_token, error } = getHashParameters(window.location.hash);
 	env.ACCESS_TOKEN = access_token;
 	env.REFRESH_TOKEN = refresh_token;
 
@@ -66,7 +81,14 @@ function main() {
 			headers: {
 				'Authorization': `Bearer ${access_token}`,
 			},
-			success: handleUserProfileSuccess
+			/**
+			 * 
+			 * @param {*} data 
+			 */
+			success: function (data) {
+				env.DISPLAY_NAME = data.display_name;
+				env.CONNECTED = true;
+			}
 		});
 		updateInterval = setInterval(update, REFRESH_INTERVAL);
 	} else {
@@ -79,3 +101,4 @@ function main() {
 }
 
 main();
+//#endregion

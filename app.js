@@ -3,15 +3,15 @@
  * It performs the Authorization Code oAuth2 flow 
  * to authenticate against the Spotify Account API.
  * It also performs the getting of genres for the
- * currently playing song.
+ * currently playing track.
  */
 
 //#region Imports
 
+import { $ } from './external_scripts/jquery-3.7.1.min';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
-import { $ } from './external_scripts/jquery-3.7.1.min';
 
 //#endregion
 
@@ -28,23 +28,6 @@ const LASTFM_API_KEY = '53a170f816b7dc8552d657154a07c672'
 const SERVER_PORT = 8383
 const REDIRECT_URI = `http://localhost:${SERVER_PORT}/callback`;
 //#endregion
-
-// TODO move utility functions to separate file
-/**
- * Generates a random string containing numbers and letters
- * @param  {number} length The length of the string
- * @return {string} The generated string
- */
-function generateRandomString(length) {
-    var text = '';
-    var possible =
-        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-
-    for (var i = 0; i < length; i++) {
-        text += possible.charAt(Math.floor(Math.random() * possible.length));
-    }
-    return text;
-};
 
 /**
  * Handles incoming errors.
@@ -124,6 +107,10 @@ app.get('/callback', function (request, response) {
             code: authorizationCode,
             redirect_uri: REDIRECT_URI,
         },
+        /**
+         * TODO
+         * @param {*} data 
+         */
         success: function (data) {
             // send access and refresh token to view as query parameters
             response.redirect('/#' +
@@ -154,6 +141,10 @@ app.get('/refresh_token', function (request, response) {
             grant_type: 'refresh_token',
             refresh_token: env.REFRESH_TOKEN,
         },
+        /**
+         * TODO
+         * @param {*} data 
+         */
         success: function (data) {
             // send access and refresh token to view as query parameters
             response.redirect('/#' +
@@ -172,10 +163,6 @@ app.get('/refresh_token', function (request, response) {
 
 //#region lastfm genres
 app.get('/get_genres', function (request, response) {
-    // -name artists- genres images
-
-
-
     $.get({
         url: 'https://ws.audioscrobbler.com/2.0/?' +
             new URLSearchParams({
