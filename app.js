@@ -8,10 +8,10 @@
 
 //#region Imports
 
-import { $ } from './external_scripts/jquery-3.7.1.min';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
+import { $ } from './external_scripts/jquery-3.7.1.min';
 
 //#endregion
 
@@ -32,9 +32,25 @@ const REDIRECT_URI = `http://localhost:${SERVER_PORT}/callback`;
 /**
  * Handles incoming errors.
  * Sends errors to view as query parameter.
+ * @param {*} error The error that has occured
+ * @param {*} response The response to the initial API request
  */
-function errorHandler(error, response) {
+function handleError(error, response) {
     response.redirect(`/#error=${error}`);
+}
+
+/**
+ * Sends access and refresh token to view as query parameters.
+ * @param {Map<string>} data The response body of the API request
+ * @param {*} response The response to the initial API request
+ */
+function handleAuthorizationSuccess(data, response) {
+    response.redirect('/#' +
+        new URLSearchParams({
+            access_token: data.access_token,
+            refresh_token: data.refresh_token,
+        }).toString()
+    );
 }
 
 const app = express();
@@ -81,14 +97,14 @@ app.get('/callback', function (request, response) {
     if (returnedState === undefined ||
         returnedState !== originalState) {
 
-        errorHandler('state_mismatch', response);
+        handleError('state_mismatch', response);
     }
 
     const returnedError = request?.query?.error;
 
     if (returnedError) {
 
-        errorHandler(returnedError, response)
+        handleError(returnedError, response)
     }
 
     response.clearCookie(AUTH_STATE_KEY);
@@ -107,21 +123,11 @@ app.get('/callback', function (request, response) {
             code: authorizationCode,
             redirect_uri: REDIRECT_URI,
         },
-        /**
-         * TODO
-         * @param {*} data 
-         */
         success: function (data) {
-            // send access and refresh token to view as query parameters
-            response.redirect('/#' +
-                new URLSearchParams({
-                    access_token: data.access_token,
-                    refresh_token: data.refresh_token,
-                }).toString()
-            );
+            handleAuthorizationSuccess(data, response);
         },
         error: function (xhr) {
-            errorHandler(`${xhr.status}_${xhr.statusText}`, response);
+            handleError(`${xhr.status}_${xhr.statusText}`, response);
         },
     });
 });
@@ -141,27 +147,40 @@ app.get('/refresh_token', function (request, response) {
             grant_type: 'refresh_token',
             refresh_token: env.REFRESH_TOKEN,
         },
-        /**
-         * TODO
-         * @param {*} data 
-         */
         success: function (data) {
-            // send access and refresh token to view as query parameters
-            response.redirect('/#' +
-                new URLSearchParams({
-                    access_token: data.access_token,
-                    refresh_token: data.refresh_token,
-                }).toString()
-            );
+            handleAuthorizationSuccess(data, response);
         },
         error: function (xhr) {
-            errorHandler(`${xhr.status}_${xhr.statusText}`, response);
+            handleError(`${xhr.status}_${xhr.statusText}`, response);
         },
     });
+});
+
+/**
+ * Request Spotify current track information using access token.
+ */
+app.get('/track_information', function (request, response) {
+
+    $.get({
+        url: 'https://api.spotify.com/v1/me/player/currently-playing',
+        headers: {
+            'Authorization': `Bearer ${env.ACCESS_TOKEN}`,
+            'Content-Type': 'application/json',
+        },
+        success: async function (data) {
+            response.send(data);
+        },
+        error: function (xhr) {
+            handleError(`${xhr.status}_${xhr.statusText}`, response);
+        },
+    })
 });
 //#endregion
 
 //#region lastfm genres
+/**
+ * Request Lastfm tags/genres for currently playing track.
+ */
 app.get('/get_genres', function (request, response) {
     $.get({
         url: 'https://ws.audioscrobbler.com/2.0/?' +
@@ -177,7 +196,7 @@ app.get('/get_genres', function (request, response) {
             response.send({ genres: data?.toptags?.tag });
         },
         error: function (xhr) {
-            errorHandler(`${xhr.status}_${xhr.statusText}`, response);
+            handleError(`${xhr.status}_${xhr.statusText}`, response);
         },
     });
 });

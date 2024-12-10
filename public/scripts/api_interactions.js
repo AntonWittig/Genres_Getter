@@ -26,26 +26,28 @@ async function getGenres(trackInformation) {
  * @returns The Spotify track information ombined with the genres if they could fetched
  */
 export async function getCurrentlyPlayingTrack() {
-	let trackInformation;
+	let trackInformation = {};
 
-	// Request Spotify track information
 	await $.get({
-		url: 'https://api.spotify.com/v1/me/player',
-		headers: {
-			'Authorization': `Bearer ${access_token}`,
-			'Content-Type': 'application/json',
-		},
+		url: '/track_information',
 		/**
 		 * Initiates requesting of genres, if a new track is played.
 		 * @param {Map<string>} data The response body of the API request
 		 */
 		success: async function (data) {
+			// Abort if no track is playing
+			if (!data.is_playing) {
+				trackInformation = {is_playing: false};
+				return;
+			}
+
 			// Abort if track information is already known
 			if (data.item.name === env.TRACK_NAME &&
 				data.item.artists.join(', ') === env.TRACK_ARTISTS)
 				return;
 
 			trackInformation = await getGenres(data.item);
+			trackInformation.is_playing = true;
 		},
 		error: refreshAccessToken,
 	})

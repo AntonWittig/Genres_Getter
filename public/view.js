@@ -3,6 +3,7 @@
 import { getCurrentlyPlayingTrack, refreshAccessToken } from './scripts/spotify_api_interactions';
 
 import { env } from 'node:process';
+import NoTrackTemplate from './templates/no_track.handlebars';
 import TrackTemplate from './templates/track.handlebars';
 import UserTemplate from './templates/user.handlebars';
 
@@ -34,16 +35,23 @@ async function update() {
 
 		const trackInformation = await getCurrentlyPlayingTrack();
 
-		// TODO also include track cover
-		env.TRACK_NAME = trackInformation.name;
-		env.TRACK_ARTISTS = trackInformation.artists.join(', ');
-		env.TRACK_GENRES = filterGenres(trackInformation.genres).join(', ');
+		if (trackInformation?.is_playing) {
 
-		trackContainer.innerHTML = TrackTemplate({
-			track: env.TRACK_NAME,
-			artists: env.TRACK_ARTISTS,
-			genres: env.TRACK_GENRES.length > 0 ? env.TRACK_GENRES : DEFAULT_GENRES_MESSAGE,
-		});
+			env.TRACK_NAME = trackInformation.name;
+			env.TRACK_ARTISTS = trackInformation.artists.join(', ');
+			env.TRACK_GENRES = filterGenres(trackInformation.genres).join(', ');
+			env.TRACK_IMAGE_URL = trackInformation.images[0].url;
+
+			trackContainer.innerHTML = TrackTemplate({
+				track: env.TRACK_NAME,
+				artists: env.TRACK_ARTISTS,
+				genres: env.TRACK_GENRES.length > 0 ? env.TRACK_GENRES : DEFAULT_GENRES_MESSAGE,
+				imageUrl: env.TRACK_IMAGE_URL,
+			});
+		}
+		else {
+			trackContainer.innerHTML = NoTrackTemplate();
+		}
 	}
 	else {
 		initialView.show();
@@ -52,10 +60,9 @@ async function update() {
 }
 
 /**
- * Runs once the site is refreshed/loaded.
+ * Runs on startup, authorization success, or backend request error.
  */
 function main() {
-	// TODO figure out how to best skip this on reload
 	const { access_token, refresh_token, error } = getHashParameters(window.location.hash);
 	env.ACCESS_TOKEN = access_token;
 	env.REFRESH_TOKEN = refresh_token;
