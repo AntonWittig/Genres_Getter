@@ -12,21 +12,23 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
 import { $ } from './external_scripts/jquery-3.7.1.min';
+import { generateRandomString } from './public/scripts/utility';
 
 //#endregion
 
 //#region Global variables
-const SPOTIFY_CLIENT_ID = '71fef7bf04154244983a0f920c1c4064'
-const SPOTIFY_CLIENT_SECRET = '********'
+const SPOTIFY_CLIENT_ID = '71fef7bf04154244983a0f920c1c4064';
+const SPOTIFY_CLIENT_SECRET = '********';
 const ENCODED_CREDENTIALS = new Buffer
     .from(`${SPOTIFY_CLIENT_ID}:${SPOTIFY_CLIENT_SECRET}`)
     .toString('base64');
 const AUTH_STATE_KEY = 'spotify_auth_state';
 
-const LASTFM_API_KEY = '53a170f816b7dc8552d657154a07c672'
+const LASTFM_API_KEY = '53a170f816b7dc8552d657154a07c672';
 
-const SERVER_PORT = 8383
-const REDIRECT_URI = `http://localhost:${SERVER_PORT}/callback`;
+const PORT = 8383;
+module.exports.PORT = PORT;
+const REDIRECT_URI = `http://localhost:${PORT}/callback`;
 //#endregion
 
 /**
@@ -56,7 +58,7 @@ function handleAuthorizationSuccess(data, response) {
 const app = express();
 
 app.use([
-    express.static('/public'),
+    express.static('public'),
     cors(),
     cookieParser()
 ]);
@@ -202,4 +204,6 @@ app.get('/get_genres', function (request, response) {
 });
 //#endregion
 
-app.listen(SERVER_PORT);
+app.listen(PORT, function () {
+    console.log(`listening on http://localhost:${PORT}`);
+});

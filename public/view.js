@@ -1,6 +1,7 @@
 //#region Imports
 
 import { getCurrentlyPlayingTrack, refreshAccessToken } from './scripts/spotify_api_interactions';
+import { filterGenres, getHashParameters } from './scripts/utility';
 
 import { env } from 'node:process';
 import NoTrackTemplate from './templates/no_track.handlebars';

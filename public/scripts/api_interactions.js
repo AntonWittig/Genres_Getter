@@ -5,7 +5,7 @@ import { env } from 'node:process';
  * @param {Map<string>} trackInformation The default Spotify track information
  * @returns The Spotify track information combined with the genres if they could fetched
  */
-async function getGenres(trackInformation) {
+module.exports.getGenres = async function (trackInformation) {
 	await $.get({
 		url: '/get_genres',
 		/**
@@ -25,7 +25,7 @@ async function getGenres(trackInformation) {
  * Requests the backend to request the information of the currently played track.
  * @returns The Spotify track information ombined with the genres if they could fetched
  */
-export async function getCurrentlyPlayingTrack() {
+module.exports.getCurrentlyPlayingTrack = async function () {
 	let trackInformation = {};
 
 	await $.get({
@@ -37,7 +37,7 @@ export async function getCurrentlyPlayingTrack() {
 		success: async function (data) {
 			// Abort if no track is playing
 			if (!data.is_playing) {
-				trackInformation = {is_playing: false};
+				trackInformation = { is_playing: false };
 				return;
 			}
 
@@ -58,7 +58,7 @@ export async function getCurrentlyPlayingTrack() {
 /**
  * Requests the backend to request a new access token.
  */
-export function refreshAccessToken() {
+module.exports.refreshAccessToken = function () {
 	$.get({
 		url: '/refresh_token',
 	});

@@ -1,6 +1,6 @@
-const { app, BrowserWindow, nativeTheme } = require("electron");
+import { BrowserWindow, app, nativeTheme } from 'electron';
 
-const server = require("./app");
+import server from './app';
 
 let mainWindow;
 
@@ -20,40 +20,38 @@ function UpsertKeyValue(obj, keyToChange, value) {
 
 function createWindow() {
     mainWindow = new BrowserWindow({
-        width: 470,
-        height: 270,
-        minWidth: 470,
-        minHeight: 300,
+        width: 800,
+        height: 600,
         resizable: false,
-        autoHideMenuBar: true,
         alwaysOnTop: true,
+        autoHideMenuBar: true,
         webPreferences: {
             nodeIntegration: true,
         },
-        icon: "./assets/icon.png",
+        icon: './assets/icon.ico',
     });
 
-    nativeTheme.themeSource = "system";
-    mainWindow.once("ready-to-show", () => {
+    nativeTheme.themeSource = 'system';
+    mainWindow.once('ready-to-show', () => {
         mainWindow.show();
     });
-    mainWindow.loadURL("http://localhost:8383");
-    mainWindow.on("closed", function() {
+    mainWindow.loadURL(`http://localhost:${server.PORT}/index.html`);
+    mainWindow.on('closed', function () {
         mainWindow = null;
     });
 
     mainWindow.webContents.session.webRequest.onBeforeRequest(
         (details, callback) => {
             const { requestHeaders } = details;
-            UpsertKeyValue(requestHeaders, "Access-Control-Allow-Origin", ["*"]);
+            UpsertKeyValue(requestHeaders, 'Access-Control-Allow-Origin', ['*']);
             callback({ requestHeaders });
         }
     );
     mainWindow.webContents.session.webRequest.onHeadersReceived(
         (details, callback) => {
             const { responseHeaders } = details;
-            UpsertKeyValue(responseHeaders, "Access-Control-Allow-Origin", ["*"]);
-            UpsertKeyValue(responseHeaders, "Access-Control-Allow-Headers", ["*"]);
+            UpsertKeyValue(responseHeaders, 'Access-Control-Allow-Origin', ['*']);
+            UpsertKeyValue(responseHeaders, 'Access-Control-Allow-Headers', ['*']);
             callback({
                 responseHeaders,
             });
@@ -61,20 +59,21 @@ function createWindow() {
     );
 }
 
-app.on("ready", createWindow);
 
-app.on("resize", function(e, x, y) {
-    mainWindow.setSize(x, y);
-});
 
-app.on("window-all-closed", function() {
-    if (process.platform !== "darwin") {
-        app.quit();
-    }
-});
+/**
+ * Creates a window for the app when it is activated.
+ */
+app.on('activate', () => { if (mainWindow === null) createWindow(); });
 
-app.on("activate", function() {
-    if (mainWindow === null) {
-        createWindow();
-    }
-});
+// app.on('resize', (e, x, y) => { mainWindow.setSize(x, y); });
+
+/**
+ * Mimics default OS behaviour, i.e. closing window closes the app except for macOS.
+ */
+app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
+
+
+app.on('ready', createWindow);
+
+// TODO events: open-url, 
