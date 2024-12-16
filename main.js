@@ -1,7 +1,7 @@
 import { BrowserWindow, app, nativeTheme } from 'electron';
+import { PORT, api } from './js/backend/api.js';
 
-import server from './app';
-
+const server = api;
 let mainWindow;
 
 function UpsertKeyValue(obj, keyToChange, value) {
@@ -35,28 +35,28 @@ function createWindow() {
     mainWindow.once('ready-to-show', () => {
         mainWindow.show();
     });
-    mainWindow.loadURL(`http://localhost:${server.PORT}/index.html`);
+    mainWindow.loadURL(`http://localhost:${PORT}/index.html`);
     mainWindow.on('closed', function () {
         mainWindow = null;
     });
 
-    mainWindow.webContents.session.webRequest.onBeforeRequest(
-        (details, callback) => {
-            const { requestHeaders } = details;
-            UpsertKeyValue(requestHeaders, 'Access-Control-Allow-Origin', ['*']);
-            callback({ requestHeaders });
-        }
-    );
-    mainWindow.webContents.session.webRequest.onHeadersReceived(
-        (details, callback) => {
-            const { responseHeaders } = details;
-            UpsertKeyValue(responseHeaders, 'Access-Control-Allow-Origin', ['*']);
-            UpsertKeyValue(responseHeaders, 'Access-Control-Allow-Headers', ['*']);
-            callback({
-                responseHeaders,
-            });
-        }
-    );
+    // mainWindow.webContents.session.webRequest.onBeforeRequest(
+    //     (details, callback) => {
+    //         const { requestHeaders } = details;
+    //         UpsertKeyValue(requestHeaders, 'Access-Control-Allow-Origin', ['*']);
+    //         callback({ requestHeaders });
+    //     }
+    // );
+    // mainWindow.webContents.session.webRequest.onHeadersReceived(
+    //     (details, callback) => {
+    //         const { responseHeaders } = details;
+    //         UpsertKeyValue(responseHeaders, 'Access-Control-Allow-Origin', ['*']);
+    //         UpsertKeyValue(responseHeaders, 'Access-Control-Allow-Headers', ['*']);
+    //         callback({
+    //             responseHeaders,
+    //         });
+    //     }
+    // );
 }
 
 

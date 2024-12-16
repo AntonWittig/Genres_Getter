@@ -14,3 +14,6 @@ yarn.lock
 \dist
 
 package-lock.json
+
+# Custom vscode settings
+.vscode

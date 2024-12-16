@@ -11,8 +11,8 @@
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
-import { $ } from './external_scripts/jquery-3.7.1.min';
-import { generateRandomString } from './public/scripts/utility';
+import $ from 'jquery';
+import { generateRandomString } from '../utility.js';
 
 //#endregion
 
@@ -26,8 +26,7 @@ const AUTH_STATE_KEY = 'spotify_auth_state';
 
 const LASTFM_API_KEY = '53a170f816b7dc8552d657154a07c672';
 
-const PORT = 8383;
-module.exports.PORT = PORT;
+export const PORT = 8383;
 const REDIRECT_URI = `http://localhost:${PORT}/callback`;
 //#endregion
 
@@ -55,9 +54,9 @@ function handleAuthorizationSuccess(data, response) {
     );
 }
 
-const app = express();
+export const api = express();
 
-app.use([
+api.use([
     express.static('public'),
     cors(),
     cookieParser()
@@ -68,7 +67,7 @@ app.use([
  * Initiate standard Spotify authentication flow.
  * Stores authorization state as a cookie.
  */
-app.get('/login', function (request, response) {
+api.get('/login', function (request, response) {
 
     const state = generateRandomString(16);
     const scope = 'user-read-playback-state';
@@ -91,7 +90,7 @@ app.get('/login', function (request, response) {
  * Handle Spotify authentication callback.
  * Assert state equality and handle authentication errors.
  */
-app.get('/callback', function (request, response) {
+api.get('/callback', function (request, response) {
 
     const returnedState = request?.query?.state;
     const originalState = request?.cookies[AUTH_STATE_KEY];
@@ -137,7 +136,7 @@ app.get('/callback', function (request, response) {
 /**
  * Request access token using refresh token.
  */
-app.get('/refresh_token', function (request, response) {
+api.get('/refresh_token', function (request, response) {
 
     $.post({
         url: 'https://accounts.spotify.com/api/token',
@@ -161,7 +160,7 @@ app.get('/refresh_token', function (request, response) {
 /**
  * Request Spotify current track information using access token.
  */
-app.get('/track_information', function (request, response) {
+api.get('/track_information', function (request, response) {
 
     $.get({
         url: 'https://api.spotify.com/v1/me/player/currently-playing',
@@ -183,7 +182,7 @@ app.get('/track_information', function (request, response) {
 /**
  * Request Lastfm tags/genres for currently playing track.
  */
-app.get('/get_genres', function (request, response) {
+api.get('/get_genres', function (request, response) {
     $.get({
         url: 'https://ws.audioscrobbler.com/2.0/?' +
             new URLSearchParams({
@@ -204,6 +203,6 @@ app.get('/get_genres', function (request, response) {
 });
 //#endregion
 
-app.listen(PORT, function () {
+api.listen(PORT, function () {
     console.log(`listening on http://localhost:${PORT}`);
 });

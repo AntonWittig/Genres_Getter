@@ -20,7 +20,7 @@ const SUPPORTED_GENRES = Object.freeze([
  * Obtains parameters from the hash of the current URL.
  * @returns {Object} The hash parameters
  */
-module.exports.getHashParameters = function (hash) {
+export function getHashParameters (hash) {
 	const parameters = new Object();
 	const parameterFilter = new RegExp(/([^&;=]+)=?([^&;]*)/, "g");
 	const pureHashContent = hash.substring(1);
@@ -37,7 +37,7 @@ module.exports.getHashParameters = function (hash) {
  * @param  {number} length The length of the string
  * @return {string} The generated string
  */
-module.exports.generateRandomString = function (length) {
+export function generateRandomString (length) {
 	let text = '';
 	const possible =
 		'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -46,14 +46,14 @@ module.exports.generateRandomString = function (length) {
 		text += possible.charAt(Math.floor(Math.random() * possible.length));
 	}
 	return text;
-};
+}
 
 /**
  * Filters the supplied music genres for matches with the supported music genres.
  * @param {string[]} genres The original music genres
  * @returns The filtered music genres
  */
-module.exports.filterGenres = function (genres) {
+export function filterGenres (genres) {
 	genres = genres.map((genre) => genre.name.toLowerCase());
 
 	const filteredGenres = [];

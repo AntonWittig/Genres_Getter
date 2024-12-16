@@ -22,7 +22,9 @@
     },
     "devDependencies": {
         "electron": "^33.2.1",
-        "electron-builder": "^25.1.8"
+        "electron-builder": "^25.1.8",
+        "handlebars": "^4.7.8",
+        "jquery": "^3.7.1"
     },
     "build": {
         "appId": "com.antonwittig.genres-getter",

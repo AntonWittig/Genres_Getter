@@ -1,12 +1,12 @@
 //#region Imports
 
+import { filterGenres, getHashParameters } from '../utility';
 import { getCurrentlyPlayingTrack, refreshAccessToken } from './scripts/spotify_api_interactions';
-import { filterGenres, getHashParameters } from './scripts/utility';
 
-import { env } from 'node:process';
-import NoTrackTemplate from './templates/no_track.handlebars';
+import NoTrackTemplate from './templates/no-track.handlebars';
 import TrackTemplate from './templates/track.handlebars';
 import UserTemplate from './templates/user.handlebars';
+import { env } from 'node:process';
 
 //#endregion
 
