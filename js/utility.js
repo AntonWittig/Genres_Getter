@@ -18,10 +18,11 @@ const SUPPORTED_GENRES = Object.freeze([
 //#region General functions
 /**
  * Obtains parameters from the hash of the current URL.
- * @returns {Object} The hash parameters
+ * @param {string} hash The hash from which the parameters are extracted
+ * @returns {object} The hash parameters
  */
 export function getHashParameters (hash) {
-	const parameters = new Object();
+	const parameters = {};
 	const parameterFilter = new RegExp(/([^&;=]+)=?([^&;]*)/, "g");
 	const pureHashContent = hash.substring(1);
 
@@ -51,7 +52,7 @@ export function generateRandomString (length) {
 /**
  * Filters the supplied music genres for matches with the supported music genres.
  * @param {string[]} genres The original music genres
- * @returns The filtered music genres
+ * @returns {string[]} The filtered music genres
  */
 export function filterGenres (genres) {
 	genres = genres.map((genre) => genre.name.toLowerCase());

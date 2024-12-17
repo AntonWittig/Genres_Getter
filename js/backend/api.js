@@ -8,10 +8,10 @@
 
 //#region Imports
 
+import $ from 'jquery';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
-import $ from 'jquery';
 import { generateRandomString } from '../utility.js';
 
 //#endregion
@@ -30,6 +30,7 @@ export const PORT = 8383;
 const REDIRECT_URI = `http://localhost:${PORT}/callback`;
 //#endregion
 
+// TODO put into utility file
 /**
  * Handles incoming errors.
  * Sends errors to view as query parameter.
@@ -42,7 +43,7 @@ function handleError(error, response) {
 
 /**
  * Sends access and refresh token to view as query parameters.
- * @param {Map<string>} data The response body of the API request
+ * @param {object} data The response body of the API request
  * @param {*} response The response to the initial API request
  */
 function handleAuthorizationSuccess(data, response) {
@@ -57,7 +58,7 @@ function handleAuthorizationSuccess(data, response) {
 export const api = express();
 
 api.use([
-    express.static('public'),
+    express.static('.'),
     cors(),
     cookieParser()
 ]);
@@ -168,7 +169,7 @@ api.get('/track_information', function (request, response) {
             'Authorization': `Bearer ${env.ACCESS_TOKEN}`,
             'Content-Type': 'application/json',
         },
-        success: async function (data) {
+        success: function (data) {
             response.send(data);
         },
         error: function (xhr) {

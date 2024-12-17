@@ -90,8 +90,9 @@ function main() {
 				'Authorization': `Bearer ${access_token}`,
 			},
 			/**
-			 * 
-			 * @param {*} data 
+			 * TODO outsource to api.js
+			 * Request spotify user profile data to display the username.
+			 * @param {object} data The user profile data
 			 */
 			success: function (data) {
 				env.DISPLAY_NAME = data.display_name;
