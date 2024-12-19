@@ -1,6 +1,23 @@
 import { env } from 'node:process';
 
 /**
+ * Requests the backend to request the information of the spotify user profile.
+ */
+export async function getProfileInformation() {
+	$.get({
+		url: '/profile_information',
+		/**
+		 * Set spotify user profile data to be displayed.
+		 * @param {object} data The user profile data
+		 */
+		success: function (data) {
+			env.DISPLAY_NAME = data.display_name;
+			env.CONNECTED = true;
+		}
+	});
+}
+
+/**
  * Requests the backend to request the genres of a track.
  * @param {object} trackInformation The default Spotify track information
  * @returns {Promise<object>} The Spotify track information combined with the genres if they could fetched

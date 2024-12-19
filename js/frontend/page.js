@@ -1,12 +1,12 @@
 //#region Imports
 
 import { filterGenres, getHashParameters } from '../utility';
-import { getCurrentlyPlayingTrack, refreshAccessToken } from './scripts/spotify_api_interactions';
+import { getCurrentlyPlayingTrack, getProfileInformation, refreshAccessToken } from './scripts/spotify_api_interactions';
 
+import { env } from 'node:process';
 import NoTrackTemplate from './templates/no-track.handlebars';
 import TrackTemplate from './templates/track.handlebars';
 import UserTemplate from './templates/user.handlebars';
-import { env } from 'node:process';
 
 //#endregion
 
@@ -63,7 +63,7 @@ async function update() {
 /**
  * Runs on startup, authorization success, or backend request error.
  */
-function main() {
+async function main() {
 	const { access_token, refresh_token, error } = getHashParameters(window.location.hash);
 	env.ACCESS_TOKEN = access_token;
 	env.REFRESH_TOKEN = refresh_token;
@@ -84,21 +84,8 @@ function main() {
 
 	if (access_token) {
 		// logged in, start up getting genres
-		$.get({
-			url: 'https://api.spotify.com/v1/me',
-			headers: {
-				'Authorization': `Bearer ${access_token}`,
-			},
-			/**
-			 * TODO outsource to api.js
-			 * Request spotify user profile data to display the username.
-			 * @param {object} data The user profile data
-			 */
-			success: function (data) {
-				env.DISPLAY_NAME = data.display_name;
-				env.CONNECTED = true;
-			}
-		});
+
+		await getProfileInformation();
 		updateInterval = setInterval(update, REFRESH_INTERVAL);
 	} else {
 		// not logged in yet, render initial screen
@@ -109,5 +96,5 @@ function main() {
 	update();
 }
 
-main();
+await main();
 //#endregion

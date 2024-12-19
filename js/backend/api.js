@@ -159,6 +159,22 @@ api.get('/refresh_token', function (request, response) {
 });
 
 /**
+ * Request Spotify profile information using access token.
+ */
+api.get('/profile_information', function (request, response) {
+
+    $.get({
+        url: 'https://api.spotify.com/v1/me',
+        headers: {
+            'Authorization': `Bearer ${access_token}`,
+        },
+        success: function (data) {
+            response.send(data);
+        }
+    });
+});
+
+/**
  * Request Spotify current track information using access token.
  */
 api.get('/track_information', function (request, response) {
