@@ -21,7 +21,7 @@ const SUPPORTED_GENRES = Object.freeze([
  * @param {string} hash The hash from which the parameters are extracted
  * @returns {object} The hash parameters
  */
-export function getHashParameters (hash) {
+export function getHashParameters(hash) {
 	const parameters = {};
 	const parameterFilter = new RegExp(/([^&;=]+)=?([^&;]*)/, "g");
 	const pureHashContent = hash.substring(1);
@@ -38,7 +38,7 @@ export function getHashParameters (hash) {
  * @param  {number} length The length of the string
  * @return {string} The generated string
  */
-export function generateRandomString (length) {
+export function generateRandomString(length) {
 	let text = '';
 	const possible =
 		'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -54,7 +54,7 @@ export function generateRandomString (length) {
  * @param {string[]} genres The original music genres
  * @returns {string[]} The filtered music genres
  */
-export function filterGenres (genres) {
+export function filterGenres(genres) {
 	genres = genres.map((genre) => genre.name.toLowerCase());
 
 	const filteredGenres = [];
@@ -74,5 +74,29 @@ export function filterGenres (genres) {
 	}
 
 	return filteredGenres;
+}
+
+/**
+ * Handles incoming errors.
+ * Sends errors to view as query parameter.
+ * @param {*} error The error that has occured
+ * @param {*} response The response to the initial API request
+ */
+export function handleError(error, response) {
+	response.redirect(`/#error=${error}`);
+}
+
+/**
+ * Sends access and refresh token to view as query parameters.
+ * @param {object} data The response body of the API request
+ * @param {*} response The response to the initial API request
+ */
+export function handleAuthorizationSuccess(data, response) {
+	response.redirect('/#' +
+		new URLSearchParams({
+			access_token: data.access_token,
+			refresh_token: data.refresh_token,
+		}).toString()
+	);
 }
 //#endregion

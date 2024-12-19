@@ -8,11 +8,12 @@
 
 //#region Imports
 
-import $ from 'jquery';
+import { generateRandomString, handleAuthorizationSuccess, handleError } from '../utility.js';
+
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
-import { generateRandomString } from '../utility.js';
+import $ from 'jquery';
 
 //#endregion
 
@@ -29,31 +30,6 @@ const LASTFM_API_KEY = '53a170f816b7dc8552d657154a07c672';
 export const PORT = 8383;
 const REDIRECT_URI = `http://localhost:${PORT}/callback`;
 //#endregion
-
-// TODO put into utility file
-/**
- * Handles incoming errors.
- * Sends errors to view as query parameter.
- * @param {*} error The error that has occured
- * @param {*} response The response to the initial API request
- */
-function handleError(error, response) {
-    response.redirect(`/#error=${error}`);
-}
-
-/**
- * Sends access and refresh token to view as query parameters.
- * @param {object} data The response body of the API request
- * @param {*} response The response to the initial API request
- */
-function handleAuthorizationSuccess(data, response) {
-    response.redirect('/#' +
-        new URLSearchParams({
-            access_token: data.access_token,
-            refresh_token: data.refresh_token,
-        }).toString()
-    );
-}
 
 export const api = express();
 
